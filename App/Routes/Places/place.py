@@ -5,10 +5,11 @@ from .placeSchema import PlaceSchema
 import overpy
 import requests
 from marshmallow import Schema, fields, validate
+import math
 
 places_bp = Blueprint('places', __name__, url_prefix='/places')
 
-# Authentication check
+# Authentication check (placeholder for JWT if needed)
 def require_auth():
     if 'user_id' not in session:
         return
@@ -31,7 +32,7 @@ class RouteSchema(Schema):
         ),
     )
 
-# Existing /nearby endpoint
+# Existing /nearby endpoint (unchanged)
 @places_bp.route('/nearby', methods=['GET'])
 def get_nearby_places():
     try:
@@ -107,7 +108,7 @@ def get_nearby_places():
             error=str(e)
         )
 
-# Existing /directions endpoint
+# Updated /directions endpoint
 @places_bp.route('/directions', methods=['GET'])
 def get_walking_directions():
     try:
@@ -160,7 +161,7 @@ def get_walking_directions():
                 instructions.append({
                     'text': instruction,
                     'distance': step['distance'],
-                    'interval': maneuver.get('location', [])
+                    'interval': maneuver.get('location', [])  # [lon, lat]
                 })
 
         route = {
@@ -209,19 +210,86 @@ def get_walking_directions():
             error=str(e)
         )
 
-# New /search endpoint
+# New /current_step endpoint
+@places_bp.route('/current_step', methods=['POST'])
+def get_current_step():
+    try:
+        require_auth()
+        data = request.get_json()
+        user_pos = data.get('user_position')  # { "lat": x, "lng": y }
+        steps = data.get('steps')            # List of instructions from /directions
+        current_index = data.get('current_index', 0)
+
+        if not user_pos or not steps:
+            raise BadRequest(description='Missing user position or steps')
+        if not isinstance(current_index, int) or current_index < 0:
+            raise BadRequest(description='Invalid current index')
+
+        # Haversine distance calculation
+        def haversine_distance(lat1, lon1, lat2, lon2):
+            R = 6371000  # Earth radius in meters
+            phi1, phi2 = math.radians(lat1), math.radians(lat2)
+            delta_phi = math.radians(lat2 - lat1)
+            delta_lambda = math.radians(lon2 - lon1)
+            a = math.sin(delta_phi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2) ** 2
+            return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+        # Check distance to next step
+        if current_index < len(steps) - 1:
+            next_step = steps[current_index + 1]
+            next_location = next_step['interval']  # [lon, lat]
+            distance = haversine_distance(
+                user_pos['lat'], user_pos['lng'],
+                next_location[1], next_location[0]
+            )
+            if distance < 20:  # 20-meter threshold
+                current_index += 1
+
+        instruction = steps[current_index]['text'] if current_index < len(steps) else 'Sampai di tujuan'
+
+        return base_response(
+            code=200,
+            status='success',
+            message='Current step retrieved successfully',
+            data={
+                'current_index': current_index,
+                'instruction': instruction
+            }
+        )
+
+    except ValueError:
+        return base_response(
+            code=400,
+            status='error',
+            message='Invalid input parameters',
+            error={'parameters': 'Invalid format'}
+        )
+    except BadRequest as e:
+        return base_response(
+            code=400,
+            status='error',
+            message=str(e),
+            error={'parameters': str(e)}
+        )
+    except Exception as e:
+        return base_response(
+            code=500,
+            status='error',
+            message='Internal server error',
+            error=str(e)
+        )
+
+# Existing /search endpoint (unchanged)
 @places_bp.route('/search', methods=['GET'])
 def search_places():
     try:
         require_auth()
-        # Get query parameters
         query = request.args.get('query', '').strip()
         lat = float(request.args.get('lat', 0))
         lon = float(request.args.get('lon', 0))
         radius = int(request.args.get('radius', 10000))
         tags = request.args.get('tags', '').strip().split(',') if request.args.get('tags') else []
 
-        # Validate inputs
         if not query and not tags:
             raise BadRequest(description='Query or tags must be provided')
         if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
@@ -229,10 +297,7 @@ def search_places():
         if radius < 100 or radius > 10000:
             raise BadRequest(description='Radius must be between 100 and 10000 meters')
 
-        # Initialize Overpass API
         api = overpy.Overpass()
-
-        # Construct Overpass query
         tag_filters = ''.join([f'["{tag.strip()}"]' for tag in tags if tag.strip()]) if tags else ''
         name_filter = f'["name"~"{query}",i]' if query else ''
         query_str = f"""
@@ -241,10 +306,7 @@ def search_places():
             out body;
         """
 
-        # Execute query
         result = api.query(query_str)
-
-        # Process results
         places = [
             {
                 'id': str(node.id),
@@ -256,7 +318,6 @@ def search_places():
             for node in result.nodes
         ]
 
-        # Serialize with Marshmallow
         schema = PlaceSchema(many=True)
         result = schema.dump(places)
         return base_response(
