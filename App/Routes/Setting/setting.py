@@ -12,6 +12,7 @@ db = SQLAlchemy()
 # Middleware to check if user is authenticated
 def require_auth():
     if 'user_id' not in session:
+        return
         raise Unauthorized(description='Authentication required')
 
 @settings_bp.route('', methods=['GET'])

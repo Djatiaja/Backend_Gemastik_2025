@@ -1,0 +1,101 @@
+description: Ultralytics YOLO11n model trained on /usr/src/ultralytics/ultralytics/cfg/datasets/coco.yaml
+author: Ultralytics
+date: '2025-07-29T17:53:48.798565'
+version: 8.3.170
+license: AGPL-3.0 License (https://ultralytics.com/license)
+docs: https://docs.ultralytics.com
+stride: 32
+task: detect
+batch: 1
+imgsz:
+- 640
+- 640
+names:
+  0: orang
+  1: sepeda
+  2: mobil
+  3: sepeda motor
+  4: pesawat
+  5: bus
+  6: kereta api
+  7: truk
+  8: perahu
+  9: lampu lalu lintas
+  10: hidran
+  11: rambu berhenti
+  12: meteran parkir
+  13: bangku
+  14: burung
+  15: kucing
+  16: anjing
+  17: kuda
+  18: domba
+  19: sapi
+  20: gajah
+  21: beruang
+  22: zebra
+  23: jerapah
+  24: ransel
+  25: payung
+  26: tas tangan
+  27: dasi
+  28: koper
+  29: frisbee
+  30: ski
+  31: papan seluncur salju
+  32: bola olahraga
+  33: layang-layang
+  34: tongkat bisbol
+  35: sarung tangan bisbol
+  36: papan seluncur
+  37: papan selancar
+  38: raket tenis
+  39: botol
+  40: gelas anggur
+  41: cangkir
+  42: garpu
+  43: pisau
+  44: sendok
+  45: mangkuk
+  46: pisang
+  47: apel
+  48: sandwich
+  49: jeruk
+  50: brokoli
+  51: wortel
+  52: hot dog
+  53: pizza
+  54: donat
+  55: kue
+  56: kursi
+  57: sofa
+  58: tanaman pot
+  59: tempat tidur
+  60: meja makan
+  61: toilet
+  62: televisi
+  63: laptop
+  64: mouse
+  65: remot
+  66: papan ketik
+  67: ponsel
+  68: oven microwave
+  69: oven
+  70: pemanggang roti
+  71: wastafel
+  72: lemari es
+  73: buku
+  74: jam
+  75: vas
+  76: gunting
+  77: boneka beruang
+  78: pengering rambut
+  79: sikat gigi
+args:
+  batch: 1
+  fraction: 1.0
+  half: false
+  int8: false
+  dynamic: false
+  nms: false
+channels: 3

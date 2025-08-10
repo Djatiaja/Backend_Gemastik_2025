@@ -8,7 +8,7 @@ from App.Routes.Setting.setting import settings_bp
 from App.Routes.Favorite.favorite import favorites_bp
 from App.Routes.Places.place import places_bp
 from App.Routes.Auth.auth import auth_bp
-from App.Routes.CV.cv import cv_bp
+from App.Routes.CV.cv import inference_bp
 
 load_dotenv()
 
@@ -27,11 +27,11 @@ app.register_blueprint(settings_bp)
 app.register_blueprint(places_bp)
 app.register_blueprint(favorites_bp)
 app.register_blueprint(auth_bp)
-app.register_blueprint(cv_bp)
+app.register_blueprint(inference_bp)
 app.register_blueprint(google_bp, url_prefix="/login")
 
 with app.app_context():
     db.create_all()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000)

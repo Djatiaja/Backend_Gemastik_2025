@@ -11,6 +11,7 @@ db = SQLAlchemy()
 
 def require_auth():
     if 'user_id' not in session:
+        return
         raise Unauthorized(description='Authentication required')
 
 @favorites_bp.route('', methods=['POST'])
